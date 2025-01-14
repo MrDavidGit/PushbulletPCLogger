@@ -1,0 +1,24 @@
+# Ignorar archivos de configuración sensibles
+.env
+.env.*
+
+# Ignorar archivos de Python generados automáticamente
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignorar entornos virtuales
+.venv/
+env/
+venv/
+
+# Ignorar archivos de logs y temporales
+*.log
+*.tmp
+
+# Ignorar información del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar información de control de paquetes
+*.egg-info/

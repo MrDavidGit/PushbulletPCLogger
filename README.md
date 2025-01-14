@@ -1,0 +1,2 @@
+# PushbulletPCLogger
+Dos scripts simples para recibir notificaciones en tu dispositivo cuando un ordenador se encienda o apague.
