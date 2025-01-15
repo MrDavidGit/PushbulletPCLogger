@@ -2,42 +2,34 @@ from pushbullet import Pushbullet
 from dotenv import load_dotenv
 import os
 from datetime import datetime
-import psutil
 import mariadb
+import socket
 
+# Cargar las variables de entorno
 load_dotenv()
 
+# Configuración de Pushbullet
 pb = Pushbullet(os.getenv("API_KEY"))
-
-# Datos de conexión a MariaDB
-DB_HOST = "localhost"         # Cambia por tu host
-DB_PORT = 3306                # Cambia si usas un puerto diferente
-DB_USER = "root"              # Cambia por tu usuario
-DB_PASSWORD = "password"      # Cambia por tu contraseña
-DB_NAME = "mi_base_de_datos"  # Cambia por el nombre de tu base de datos
 
 # Obtener la hora actual
 fecha_inicio = datetime.now()
 
-# Obtener la hora exacta de arranque del sistema
-hora_arranque = datetime.fromtimestamp(psutil.boot_time())
-
-# Diferencia de tiempo entre ahora y el arranque del sistema (en segundos redondeados)
-tiempo_arranque = round((datetime.now() - hora_arranque).total_seconds(), 2)
-
-# Fecha en formato YYYY-MM-DD (compatible con MariaDB)
-fecha_inicio_formateada = fecha_inicio.strftime('%Y-%m-%d')
+# Fecha en formato YYYY-MM-DD (Compatible con MariaDB)
+fecha_formateada = fecha_inicio.strftime('%Y-%m-%d')
 
 # Formato de hora
-hora_inicio = fecha_inicio.strftime('%H:%M:%S')
+hora_formateada = fecha_inicio.strftime('%H:%M:%S')
+
+# Obtener el nombre del equipo
+nombre_equipo = socket.gethostname()
 
 # Conexión a la base de datos
 conn = mariadb.connect(
-    host=DB_HOST,
-    port=DB_PORT,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME
+    host=os.getenv("DB_HOST"),
+    port=int(os.getenv("DB_PORT")),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME")
 )
 
 cursor = conn.cursor()
@@ -45,22 +37,22 @@ cursor = conn.cursor()
 # Crear tabla si no existe
 cursor.execute("""CREATE TABLE IF NOT EXISTS INICIO (
                id INT PRIMARY KEY AUTO_INCREMENT,
+               nombre_equipo VARCHAR(255) NOT NULL,
                hora TIME NOT NULL,
-               tiempo_arranque FLOAT NOT NULL,
                fecha DATE NOT NULL
             )
             """)
 
 # Insertar datos
 cursor.execute("""
-               INSERT INTO INICIO (hora, tiempo_arranque, fecha)
+               INSERT INTO INICIO (nombre_equipo, hora, fecha)
                VALUES (?, ?, ?)
-                """, (hora_inicio, tiempo_arranque, fecha_inicio_formateada))
+                """, (nombre_equipo, hora_formateada, fecha_formateada))
 conn.commit()
 
 # Envio de notificación por Pushbullet
 Titulo = "Inicio del dispositivo"
-Descripcion = f"El dispositivo se ha iniciado a las {hora_inicio} tardando {tiempo_arranque}s en arrancar."
+Descripcion = f"El equipo 💻 {nombre_equipo} se ha iniciado a las ⏲️ {hora_formateada}."
 
 pb.push_note(Titulo, Descripcion)
 
